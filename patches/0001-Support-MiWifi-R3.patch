@@ -1,6 +1,6 @@
 From 1368a4be2e0c2e5ff4b119d9fb44bbb2acd0ce40 Mon Sep 17 00:00:00 2001
-From: XFY9326 <1069665464@qq.com>
-Date: Sat, 18 Sep 2021 18:16:01 +0100
+From: JustNoLimit <umutyunus@outlook.com>
+Date: Wed, 05 June 2024 01:55:00 +0200
 Subject: [PATCH 1/2] Support MiWifi-R3
 
 ---
@@ -9,14 +9,14 @@ Subject: [PATCH 1/2] Support MiWifi-R3
  target/linux/ramips/image/mt7620.mk           |   17 +
  .../mt7620/base-files/etc/board.d/02_network  |    4 +
  .../mt7620/base-files/lib/upgrade/platform.sh |    8 +
- target/linux/ramips/mt7620/config-5.4         |   18 +
+ target/linux/ramips/mt7620/config-5.15         |   18 +
  target/linux/ramips/mt7620/target.mk          |    2 +-
  ...38-mtd-ralink-add-mt7620-nand-driver.patch | 2373 +++++++++++++++++
- target/linux/ramips/rt305x/config-5.4         |    1 +
- target/linux/ramips/rt3883/config-5.4         |    1 +
+ target/linux/ramips/rt305x/config-5.15         |    1 +
+ target/linux/ramips/rt3883/config-5.15         |    1 +
  10 files changed, 2598 insertions(+), 1 deletion(-)
  create mode 100644 target/linux/ramips/dts/mt7620a_xiaomi_miwifi-r3.dts
- create mode 100644 target/linux/ramips/patches-5.4/0038-mtd-ralink-add-mt7620-nand-driver.patch
+ create mode 100644 target/linux/ramips/patches-5.15/0038-mtd-ralink-add-mt7620-nand-driver.patch
 
 diff --git a/package/boot/uboot-envtools/files/ramips b/package/boot/uboot-envtools/files/ramips
 index 0de062b..f7e1856 100644
@@ -26,10 +26,11 @@ index 0de062b..f7e1856 100644
  linksys,ea7300-v2|\
  linksys,ea7500-v2|\
  linksys,ea8100-v1|\
+ linksys,ea8100-v2|\
 +xiaomi,miwifi-r3|\
- xiaomi,mi-router-3g|\
- xiaomi,mi-router-3-pro|\
- xiaomi,mi-router-4|\
+ mts,wg430223)
+ 	ubootenv_add_uci_config "/dev/mtd1" "0x0" "0x1000" "0x20000"
+ 	;;
 diff --git a/target/linux/ramips/dts/mt7620a_xiaomi_miwifi-r3.dts b/target/linux/ramips/dts/mt7620a_xiaomi_miwifi-r3.dts
 new file mode 100644
 index 0000000..47665b4
@@ -236,9 +237,9 @@ index 56941f2..1e2bcea 100644
 +endef
 +TARGET_DEVICES += xiaomi_miwifi-r3
 +
- define Device/youku_yk1
+ define Device/youku_x2
    SOC := mt7620a
-   IMAGE_SIZE := 32448k
+   IMAGE_SIZE := 16064k
 diff --git a/target/linux/ramips/mt7620/base-files/etc/board.d/02_network b/target/linux/ramips/mt7620/base-files/etc/board.d/02_network
 index 919102b..4314142 100755
 --- a/target/linux/ramips/mt7620/base-files/etc/board.d/02_network
@@ -273,10 +274,10 @@ index 9f71dc9..26c5d99 100755
  	*)
  		default_do_upgrade "$1"
  		;;
-diff --git a/target/linux/ramips/mt7620/config-5.4 b/target/linux/ramips/mt7620/config-5.4
+diff --git a/target/linux/ramips/mt7620/config-5.15 b/target/linux/ramips/mt7620/config-5.15
 index 6a4dde7..ce91220 100644
---- a/target/linux/ramips/mt7620/config-5.4
-+++ b/target/linux/ramips/mt7620/config-5.4
+--- a/target/linux/ramips/mt7620/config-5.15
++++ b/target/linux/ramips/mt7620/config-5.15
 @@ -47,6 +47,10 @@ CONFIG_CPU_R4K_CACHE_TLB=y
  CONFIG_CPU_SUPPORTS_32BIT_KERNEL=y
  CONFIG_CPU_SUPPORTS_HIGHMEM=y
@@ -285,9 +286,9 @@ index 6a4dde7..ce91220 100644
 +CONFIG_CRYPTO_ACOMP2=y
 +CONFIG_CRYPTO_DEFLATE=y
 +CONFIG_CRYPTO_LZO=y
+ CONFIG_CRYPTO_LIB_BLAKE2S_GENERIC=y
+ CONFIG_CRYPTO_LIB_POLY1305_RSIZE=2
  CONFIG_CRYPTO_RNG2=y
- CONFIG_CSRC_R4K=y
- CONFIG_DEBUG_PINCTRL=y
 @@ -141,6 +145,8 @@ CONFIG_IRQ_INTC=y
  CONFIG_IRQ_MIPS_CPU=y
  CONFIG_IRQ_WORK=y
@@ -302,9 +303,9 @@ index 6a4dde7..ce91220 100644
  # CONFIG_MTD_CFI_INTELEXT is not set
  CONFIG_MTD_CMDLINE_PARTS=y
 +CONFIG_MTD_NAND_MT7620=y
+ # CONFIG_MTD_PARSER_TPLINK_SAFELOADER is not set
  CONFIG_MTD_PHYSMAP=y
  CONFIG_MTD_SPI_NOR=y
- CONFIG_MTD_SPI_NOR_USE_4K_SECTORS=y
 @@ -173,6 +180,12 @@ CONFIG_MTD_SPLIT_JIMAGE_FW=y
  CONFIG_MTD_SPLIT_SEAMA_FW=y
  CONFIG_MTD_SPLIT_TPLINK_FW=y
@@ -343,11 +344,11 @@ index 5fc61e4..ce992fc 100644
  CPU_TYPE:=24kc
  
  DEFAULT_PACKAGES += kmod-rt2800-soc wpad-basic-wolfssl swconfig
-diff --git a/target/linux/ramips/patches-5.4/0038-mtd-ralink-add-mt7620-nand-driver.patch b/target/linux/ramips/patches-5.4/0038-mtd-ralink-add-mt7620-nand-driver.patch
+diff --git a/target/linux/ramips/patches-5.15/0038-mtd-ralink-add-mt7620-nand-driver.patch b/target/linux/ramips/patches-5.15/0038-mtd-ralink-add-mt7620-nand-driver.patch
 new file mode 100644
 index 0000000..07fafef
 --- /dev/null
-+++ b/target/linux/ramips/patches-5.4/0038-mtd-ralink-add-mt7620-nand-driver.patch
++++ b/target/linux/ramips/patches-5.15/0038-mtd-ralink-add-mt7620-nand-driver.patch
 @@ -0,0 +1,2373 @@
 +From afb07a5b467217af1df4162c707cbe554a79130d Mon Sep 17 00:00:00 2001
 +From: Chen Minqiang <ptpt52@gmail.com>
@@ -2722,10 +2723,10 @@ index 0000000..07fafef
 ++
 ++
 ++#endif
-diff --git a/target/linux/ramips/rt305x/config-5.4 b/target/linux/ramips/rt305x/config-5.4
+diff --git a/target/linux/ramips/rt305x/config-5.15 b/target/linux/ramips/rt305x/config-5.15
 index 3f93a9d..e152309 100644
---- a/target/linux/ramips/rt305x/config-5.4
-+++ b/target/linux/ramips/rt305x/config-5.4
+--- a/target/linux/ramips/rt305x/config-5.15
++++ b/target/linux/ramips/rt305x/config-5.15
 @@ -153,6 +153,7 @@ CONFIG_MIPS_SPRAM=y
  CONFIG_MODULES_USE_ELF_REL=y
  # CONFIG_MTD_CFI_INTELEXT is not set
@@ -2734,10 +2735,10 @@ index 3f93a9d..e152309 100644
  CONFIG_MTD_PHYSMAP=y
  CONFIG_MTD_SPI_NOR=y
  CONFIG_MTD_SPI_NOR_USE_4K_SECTORS=y
-diff --git a/target/linux/ramips/rt3883/config-5.4 b/target/linux/ramips/rt3883/config-5.4
+diff --git a/target/linux/ramips/rt3883/config-5.15 b/target/linux/ramips/rt3883/config-5.15
 index 09d51fd..507d712 100644
---- a/target/linux/ramips/rt3883/config-5.4
-+++ b/target/linux/ramips/rt3883/config-5.4
+--- a/target/linux/ramips/rt3883/config-5.15
++++ b/target/linux/ramips/rt3883/config-5.15
 @@ -154,6 +154,7 @@ CONFIG_MIPS_SPRAM=y
  CONFIG_MODULES_USE_ELF_REL=y
  # CONFIG_MTD_CFI_INTELEXT is not set
@@ -2748,4 +2749,3 @@ index 09d51fd..507d712 100644
  CONFIG_MTD_SPI_NOR_USE_4K_SECTORS=y
 -- 
 2.25.1
-
